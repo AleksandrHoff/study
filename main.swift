@@ -1,86 +1,175 @@
 //
 //  main.swift
-//  Homework 1.4
+//  Homework 1.5
 //
-//  Created by Александр Хофф on 10.07.2020.
+//  Created by Александр Хофф on 12.07.2020.
 //
 
-import Foundation
-
-//
-//  main.swift
-//  Homework 1.3
-//
-//  Created by Александр Хофф on 06.07.2020.
-//
-//1. Описать класс Car c общими свойствами автомобилей и пустым методом действия по аналогии с прошлым заданием.
-//2. Описать пару его наследников trunkCar и sportСar. Подумать, какими отличительными свойствами обладают эти автомобили. Описать в каждом наследнике специфичные для него свойства.
-//3. Взять из прошлого урока enum с действиями над автомобилем. Подумать, какие особенные действия имеет trunkCar, а какие – sportCar. Добавить эти действия в перечисление.
-//4. В каждом подклассе переопределить метод действия с автомобилем в соответствии с его классом.
+//1. Создать протокол «Car» и описать свойства, общие для автомобилей, а также метод действия.
+//2. Создать расширения для протокола «Car» и реализовать в них методы конкретных действий с автомобилем: открыть/закрыть окно, запустить/заглушить двигатель и т.д. (по одному методу на действие, реализовывать следует только те действия, реализация которых общая для всех автомобилей).
+//3. Создать два класса, имплементирующих протокол «Car» - trunkCar и sportСar. Описать в них свойства, отличающиеся для спортивного автомобиля и цистерны.
+//4. Для каждого класса написать расширение, имплементирующее протокол CustomStringConvertible.
 //5. Создать несколько объектов каждого класса. Применить к ним различные действия.
-//6. Вывести значения свойств экземпляров в консоль.
+//6. Вывести сами объекты в консоль.
 
 import Foundation
 
-enum MotorStatus {
-    case on, off //перечеисляем статусы двигателя (включен или выключен)
+//1.
+enum EngineCar: CustomStringConvertible {
+    case on, off
+    var description: String {
+        switch self {
+        case .on:
+            return "активен"
+        case .off:
+            return "не активен"
+        }
+    }
 }
-enum FuelTank {
-    case full,empty //перечисляем статусы топливного бака (пустой или полный)
+enum WindowCar: CustomStringConvertible {
+    case open, clased
+    var description: String {
+        switch self {
+        case .clased:
+            return "закрыты"
+        case .open:
+            return "открыты"
+            
+        }
+    }
 }
-class Car { // описываем класс "Car"
-    let brand: String // бренд производителя
-    let productionDate: Int //дата производства
-    var motorStatus: MotorStatus // статус двигателя
-    var fuelTank: FuelTank //статус топливного бака
+enum Action {
+    case switchEngine (EngineCar)
+    case swinchWondow (WindowCar)
+}
+//2.
+protocol Car {
+    var model: String {get}
+    var year: Int {get}
+    var engine: EngineCar {get set}
+    var window: WindowCar {get set}
     
-    init(brand: String, productionDate: Int) {
-        self.brand = brand
-        self.productionDate = productionDate //инициализируем "Car"
-        self.motorStatus = .on // говорим, что двигатель включен
-        self.fuelTank = .empty // говорим, что топливный бак полон
+    func action(action: Action)
+}
+
+extension Car {
+    mutating func setEngineCar(status: EngineCar) {
+        engine = status
     }
+    mutating func setWindowCar(status: WindowCar) {
+        window = status
+    }
+}
+//3.
+class TrunkCar: Car {
+    enum TrunkDescription: CustomStringConvertible {
+        case unload, full
+        var description: String {
+            switch self {
+            case .unload:
+                return "пустой"
+            case .full:
+                return "загружен"
+            }
+        }
+    }
+    enum BodyCar: CustomStringConvertible {
+        case open, closed, wagon
+        var description: String {
+            switch self {
+            case .open:
+                return "открыта"
+            case .closed:
+                return "закрыта"
+            case .wagon:
+                return "фура"
+            }
+        }
+    }
+    var model: String
+    var body: BodyCar?
+    var year: Int
+    var trunk: TrunkDescription?
+    var volumeTrunk: Double
+    var engine: EngineCar
+    var window: WindowCar
+    var fullTrunk: Double?
     
-    func setMotorStatus(_ status: MotorStatus) {
-        self.motorStatus = status // записываем в функцию статус двигателя "Car"
+    init?(model: String, body: BodyCar, year: Int, trunk: TrunkDescription, volumeTrunk: Double, engine: EngineCar, window: WindowCar, fullTrunk: Double) {
+        if volumeTrunk == 10000 || fullTrunk < 1000 || fullTrunk > volumeTrunk {
+            print("nГрузоподъемность автомобиля 1000 килограмм.\nБагажное отделение пустое.\nДанный груз не вмещается в багажное отделение!")
+        }
+        self.model = model
+        self.year = year
+        self.body = body
+        self.trunk = trunk
+        self.engine = engine
+        self.window = window
+        self.fullTrunk = fullTrunk
+        self.volumeTrunk = volumeTrunk
+    }
+    func action(action: Action) {
+        switch action {
+        case.switchEngine(let status):
+            engine = status
+        case.swinchWondow(let status):
+            window = status
+        }
     }
 }
+//4.
+extension TrunkCar: CustomStringConvertible {
+    var description: String {
+        return "Автомобиль марки\(model)\nГод выпуска \(year)\nКузов \(body?.description ?? "отцеплен")\nГрузоподъемноть\(volumeTrunk)\nСостояние двигателя \(engine)\nОкна автомобиля\(window.description)\nГруз объемом \(String(describing: fullTrunk))"}
+}
+//5.
+var lorry = TrunkCar(model: "Kamaz", body: .wagon, year: 2015, trunk: .full, volumeTrunk: 20000, engine: .off, window: .open, fullTrunk: 10000)
+lorry?.description
+lorry?.action(action: .swinchWondow(.clased))
+lorry?.description
 
-class SportCar: Car { // описываем класс "SportCar"
-    var Turbocharged: Int // создаем отличительное свойство в виде турбонагнетателя
-    init(brand: String, productionDate: Int, turbocharged: Int) { // производим инициализацию
-        self.Turbocharged = turbocharged
-        super.init(brand: brand, productionDate: productionDate)// наследуем свойства "Car"
+class SportCar: Car {
+    enum TurboCar: CustomStringConvertible {
+        case on, off
+        var description: String {
+            switch self {
+            case .on:
+                return "активна"
+            case .off:
+                return "не активна"
+            }
+        }
     }
-    override func setMotorStatus(_ motorStatus: MotorStatus) {
-        super.setMotorStatus(motorStatus)
-        print("Двигатель спортивного автомобиля \(brand): \(motorStatus)") // просим вывести стутус двигателя "SportCar"
+    var model: String
+    var year: Int
+    var engine: EngineCar
+    var window: WindowCar
+    var turbo: TurboCar?
+    init(model: String, year: Int, engine: EngineCar, window: WindowCar, turbo: TurboCar) {
+        self.model = model
+        self.year = year
+        self.engine = engine
+        self.window = window
+        self.turbo = turbo
     }
-    func turbocharged(_ turbocharged: Int) {
-        self.Turbocharged = turbocharged
-        print("Мощность турбонагнетателя \(brand): \(turbocharged) БАР") // просим вывести мощность турбонагнетателя "SportCar"
+    func action(action: Action) {
+        switch action {
+        case.switchEngine(let status):
+            engine = status
+        case.swinchWondow(let status):
+            window = status
+        }
     }
 }
-class TrunkCar: Car { // описываем класс "TrunkCar"
-    var trunkVolume: Int // создаем отличительное свойство в виде объема багажника свейственного для грузовых авто
-    init(brand: String, productionDate: Int, trunkVolume: Int) { // производим инициализацию
-        self.trunkVolume = trunkVolume
-        super.init(brand: brand, productionDate: productionDate) // наследуем свойства "Car"
-    }
-    override func setMotorStatus(_ motorStatus: MotorStatus) {
-        super.setMotorStatus(motorStatus)
-        print("Двигатель грузового автомобиля \(brand): \(motorStatus)")// просим вывести стутус двигателя "TrunkCar"
-    }
-    func setTrunkVolume(_ trunkVolume: Int) {
-        self.trunkVolume = trunkVolume
-        print("Объем багажника \(brand): \(trunkVolume) кубов") //просим вывести объем багажного отделения "TrunkCar"
+//4.
+extension SportCar: CustomStringConvertible {
+    var description: String {
+        return "Автомобиль марки \(model)\nГод выпуска \(year)\nСостояние двигателя \(engine.description)\nОкна \(window.description)\nТурбина \(String(describing: turbo?.description))"
     }
 }
+//5.
+var car = SportCar(model: "Audi", year: 2013, engine: .on, window: .open, turbo: .on)
+car.action(action: .swinchWondow(.open))
+car.action(action: .switchEngine(.on))
+car.description
 
-var trunk = TrunkCar(brand: "Volvo", productionDate: 2010, trunkVolume: 120)
-var sport = SportCar(brand: "Audi", productionDate: 2020, turbocharged: 2)
-
-sport.setMotorStatus(.on)
-trunk.setMotorStatus(.on)
-sport.turbocharged(2)
-trunk.setTrunkVolume(120) // выводим на экран данные
